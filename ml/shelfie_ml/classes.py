@@ -1,0 +1,42 @@
+"""Ingredient classes the detector learns, mapped from Open Images label names."""
+
+# (Open Images boxable label, Shelfie ingredient name). Order defines YOLO class ids — append only.
+CLASSES: list[tuple[str, str]] = [
+	("Apple", "apple"),
+	("Artichoke", "artichoke"),
+	("Banana", "banana"),
+	("Beer", "beer"),
+	("Bell pepper", "bell pepper"),
+	("Bread", "bread"),
+	("Broccoli", "broccoli"),
+	("Cabbage", "cabbage"),
+	("Cantaloupe", "cantaloupe"),
+	("Carrot", "carrot"),
+	("Cheese", "cheese"),
+	("Cucumber", "cucumber"),
+	("Egg", "egg"),
+	("Garden Asparagus", "asparagus"),
+	("Grape", "grapes"),
+	("Grapefruit", "grapefruit"),
+	("Juice", "juice"),
+	("Lemon (plant)", "lemon"),
+	("Mango", "mango"),
+	("Milk", "milk"),
+	("Mushroom", "mushroom"),
+	("Orange (fruit)", "orange"),
+	("Peach", "peach"),
+	("Pear", "pear"),
+	("Pineapple", "pineapple"),
+	("Pomegranate", "pomegranate"),
+	("Potato", "potato"),
+	("Pumpkin", "pumpkin"),
+	("Radish", "radish"),
+	("Shrimp", "shrimp"),
+	("Strawberry", "strawberry"),
+	("Tomato", "tomato"),
+	("Watermelon", "watermelon"),
+	("Wine", "wine"),
+	("Zucchini", "zucchini"),
+]
+
+NAMES: list[str] = [name for _, name in CLASSES]

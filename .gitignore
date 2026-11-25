@@ -42,3 +42,14 @@ example
 # generated native folders
 /ios
 /android
+
+# Claude Code
+CLAUDE.md
+
+# ML workspace
+ml/.venv/
+ml/data/
+ml/runs/
+ml/weights/
+*.pt
+__pycache__/
