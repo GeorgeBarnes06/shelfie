@@ -1,6 +1,6 @@
 """Fine-tune a pretrained YOLO detector on the Shelfie ingredient dataset.
 
-Usage: uv run python -m shelfie_ml.train [--epochs 40] [--model yolo26n.pt] [--name ingredients-v1]
+Usage: uv run python -m shelfie_ml.train [--epochs 30] [--model yolo26n.pt] [--name ingredients-v1]
 """
 
 import argparse
@@ -14,7 +14,7 @@ ML_DIR = Path(__file__).resolve().parent.parent
 def main() -> None:
 	parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 	parser.add_argument("--model", default="yolo26n.pt", help="Pretrained weights to start from")
-	parser.add_argument("--epochs", type=int, default=40)
+	parser.add_argument("--epochs", type=int, default=30)
 	parser.add_argument("--imgsz", type=int, default=640)
 	parser.add_argument("--batch", type=int, default=16)
 	parser.add_argument("--name", default="ingredients-v1")
