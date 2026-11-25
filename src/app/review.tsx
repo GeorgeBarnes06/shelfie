@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Alert, Image, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
-import { base64SizeKb, prepareFridgePhoto } from "@/lib/photo";
+import { detectIngredients } from "@/lib/ingredients";
+import { prepareFridgePhoto } from "@/lib/photo";
 
 export default function Review() {
 	const params = useLocalSearchParams<{ uri: string; width: string; height: string }>();
@@ -17,11 +18,8 @@ export default function Review() {
 				width: Number(params.width),
 				height: Number(params.height),
 			});
-			// TODO: send photo.base64 to the ingredient detection Edge Function.
-			Alert.alert(
-				"Photo ready",
-				`${photo.width}×${photo.height}, about ${base64SizeKb(photo.base64)} KB. Ingredient detection isn't connected yet.`,
-			);
+			const ingredients = await detectIngredients(photo);
+			router.push({ pathname: "/ingredients", params: { ingredients: JSON.stringify(ingredients) } });
 		} catch (error) {
 			console.error(error);
 			Alert.alert("Something went wrong", "We couldn't process that photo. Please try again.");
