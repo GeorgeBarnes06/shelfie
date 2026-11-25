@@ -22,14 +22,25 @@ Needs [uv](https://docs.astral.sh/uv/) (`brew install uv`). The first `uv run` c
 	```bash
 	uv run python -m shelfie_ml.prepare_dataset
 	```
-3. **Train** on the Mac's GPU (MPS). Results, charts and weights go to `runs/ingredients-v1/`:
+3. **Check the dataset**: per-ingredient counts, malformed labels, and `data/yolo/preview.jpg` with boxes drawn on random photos:
+	```bash
+	uv run python -m shelfie_ml.check_dataset
+	```
+4. **Train** on the Mac's GPU (MPS). Results, charts and weights go to `runs/ingredients-v1/`:
 	```bash
 	uv run python -m shelfie_ml.train
 	```
-4. **Try it** on any photo. Annotated copies are saved to `runs/detect/`:
+5. **Try it** on any photo. Annotated copies are saved to `runs/detect/`:
 	```bash
 	uv run python -m shelfie_ml.detect path/to/fridge.jpg
 	```
+
+6. **Export for phones**: CoreML (`.mlpackage`, iOS) and ONNX (`.onnx`, iOS and Android), written next to the weights:
+	```bash
+	uv run export_model.py
+	```
+	`export_model.py` brings its own pinned environment (Python 3.12, PyTorch 2.7, NumPy 1.26), because coremltools
+	and onnxruntime don't support the newer versions used for training. Don't "upgrade" those pins without re-testing.
 
 ## Ingredients
 
