@@ -42,15 +42,43 @@ Needs [uv](https://docs.astral.sh/uv/) (`brew install uv`). The first `uv run` c
 	`export_model.py` brings its own pinned environment (Python 3.12, PyTorch 2.7, NumPy 1.26), because coremltools
 	and onnxruntime don't support the newer versions used for training. Don't "upgrade" those pins without re-testing.
 
+## Round 2: real fridge photos
+
+Round 1 trains on Open Images only. Round 2 adds [FridgeFoodDetection](https://universe.roboflow.com/objectdetectionlearning-4empo/fridgefooddetection-cxnl3)
+(real fridge photos) and fine-tunes the round-1 model on both:
+
+```bash
+# Needs ROBOFLOW_API_KEY in ml/.env (git-ignored; free Roboflow account)
+uv run python -m shelfie_ml.fetch_roboflow --project fridgefooddetection-cxnl3 --version 1
+uv run python -m shelfie_ml.merge_datasets          # builds data/yolo-v2/
+uv run python -m shelfie_ml.check_dataset --dataset data/yolo-v2
+uv run python -m shelfie_ml.train --model runs/ingredients-v1/weights/best.pt --data data/yolo-v2/dataset.yaml --name ingredients-v2 --epochs 15
+```
+
+`data/yolo-v2/fridge.yaml` validates and tests on fridge photos only. That's the score that matters for Shelfie:
+
+```bash
+uv run yolo val model=runs/ingredients-v2/weights/best.pt data=data/yolo-v2/fridge.yaml split=test
+```
+
 ## Ingredients
 
-The 35 classes are listed in [`shelfie_ml/classes.py`](shelfie_ml/classes.py). Only append to that list:
-the order defines the class ids the model outputs.
+The 57 classes and each dataset's label mapping are in [`shelfie_ml/classes.py`](shelfie_ml/classes.py).
+Only append to `NAMES`: the order defines the class ids the model outputs.
+
+## Data sources and licences
+
+Shipping a model trained on these means crediting them (e.g. on an in-app credits/licences screen):
+
+- **Open Images V7** (Google): annotations CC BY 4.0; images are individually licensed, mostly CC BY 2.0.
+- **FridgeFoodDetection** by Karel Cornelis et al. (Erasmus Brussels), via Roboflow Universe: MIT License.
 
 ## Known limitations
 
-- Open Images has no boxes for some fridge staples (onion, lettuce, meat, yoghurt, butter), so the model can't detect them yet.
-- Training photos are mostly not taken inside fridges, so accuracy on real fridge shots will be lower than the validation score suggests.
+- Some staples are still missing (lettuce, yoghurt). Round 2 adds onion, butter, meat and others from FridgeFoodDetection.
+- Round 1's photos are mostly not taken inside fridges. Round 2 fixes that.
+- A few ingredients have very few fridge examples (cucumber, ginger, chilli, eggplant, cabbage, bell pepper).
+- FridgeFoodDetection has ~1,300 photos with empty label files. `merge_datasets` skips them.
 - Open Images labels aren't exhaustive. A photo picked for "tomato" may contain unlabelled carrots, which teaches the model to ignore them.
 
 The fix for all three is the same: add real, labelled fridge photos.

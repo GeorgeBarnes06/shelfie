@@ -18,7 +18,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from shelfie_ml.classes import CLASSES, NAMES
+from shelfie_ml.classes import NAMES, OPEN_IMAGES
 
 ML_DIR = Path(__file__).resolve().parent.parent
 OI_DIR = ML_DIR / "data" / "openimages"
@@ -32,13 +32,15 @@ Box = tuple[int, float, float, float, float]  # class id, x centre, y centre, wi
 
 def load_label_ids() -> dict[str, int]:
 	"""Map Open Images label ids (e.g. /m/014j1m) to our YOLO class ids."""
-	wanted = {oi_name: index for index, (oi_name, _) in enumerate(CLASSES)}
+	wanted = {oi_name: NAMES.index(name) for oi_name, name in OPEN_IMAGES.items()}
 	label_ids: dict[str, int] = {}
+	found: set[str] = set()
 	with open(OI_DIR / "oidv7-class-descriptions-boxable.csv", newline="") as file:
 		for label_id, display_name in csv.reader(file):
 			if display_name in wanted:
 				label_ids[label_id] = wanted[display_name]
-	missing = set(wanted) - {CLASSES[i][0] for i in label_ids.values()}
+				found.add(display_name)
+	missing = set(wanted) - found
 	if missing:
 		raise SystemExit(f"Classes not found in Open Images: {sorted(missing)}")
 	return label_ids
@@ -89,7 +91,8 @@ def select_images(boxes: dict[str, list[Box]], per_class: int) -> list[str]:
 				for other in {box[0] for box in boxes[image_id]}:
 					counts[other] += 1
 	for class_id, name in enumerate(NAMES):
-		print(f"  {name:<12} {counts[class_id]:>5} images (of {len(images_by_class[class_id])} available)")
+		if name in OPEN_IMAGES.values():
+			print(f"  {name:<12} {counts[class_id]:>5} images (of {len(images_by_class[class_id])} available)")
 	return sorted(selected)
 
 

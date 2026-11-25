@@ -1,6 +1,9 @@
 """Fine-tune a pretrained YOLO detector on the Shelfie ingredient dataset.
 
-Usage: uv run python -m shelfie_ml.train [--epochs 30] [--model yolo26n.pt] [--name ingredients-v1]
+Usage: uv run python -m shelfie_ml.train [--epochs 30] [--model yolo26n.pt] [--data data/yolo/dataset.yaml] [--name ingredients-v1]
+
+Round 2 (fine-tune round 1 on the merged dataset):
+	uv run python -m shelfie_ml.train --model runs/ingredients-v1/weights/best.pt --data data/yolo-v2/dataset.yaml --name ingredients-v2
 """
 
 import argparse
@@ -13,7 +16,8 @@ ML_DIR = Path(__file__).resolve().parent.parent
 
 def main() -> None:
 	parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-	parser.add_argument("--model", default="yolo26n.pt", help="Pretrained weights to start from")
+	parser.add_argument("--model", default="yolo26n.pt", help="Weights to start from: a name in weights/, or a path relative to ml/")
+	parser.add_argument("--data", default="data/yolo/dataset.yaml", help="Dataset YAML, relative to ml/")
 	parser.add_argument("--epochs", type=int, default=30)
 	parser.add_argument("--imgsz", type=int, default=640)
 	parser.add_argument("--batch", type=int, default=16)
@@ -21,9 +25,10 @@ def main() -> None:
 	parser.add_argument("--fraction", type=float, default=1.0, help="Use only this fraction of training images (for quick tests)")
 	args = parser.parse_args()
 
-	model = YOLO(str(ML_DIR / "weights" / args.model) if (ML_DIR / "weights" / args.model).exists() else args.model)
+	candidates = [ML_DIR / "weights" / args.model, ML_DIR / args.model]
+	model = YOLO(str(next((path for path in candidates if path.exists()), args.model)))
 	model.train(
-		data=str(ML_DIR / "data" / "yolo" / "dataset.yaml"),
+		data=str(ML_DIR / args.data),
 		epochs=args.epochs,
 		imgsz=args.imgsz,
 		batch=args.batch,

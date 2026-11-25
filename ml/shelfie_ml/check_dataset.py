@@ -3,7 +3,7 @@
 Counts images and boxes per ingredient, flags malformed labels, and draws boxes on a grid of
 random training images (data/yolo/preview.jpg) so you can eyeball that labels line up.
 
-Usage: uv run python -m shelfie_ml.check_dataset [--grid 4]
+Usage: uv run python -m shelfie_ml.check_dataset [--dataset data/yolo-v2] [--match "fridge_*"] [--grid 4]
 """
 
 import argparse
@@ -15,7 +15,8 @@ from PIL import Image, ImageDraw
 
 from shelfie_ml.classes import NAMES
 
-YOLO_DIR = Path(__file__).resolve().parent.parent / "data" / "yolo"
+ML_DIR = Path(__file__).resolve().parent.parent
+YOLO_DIR = ML_DIR / "data" / "yolo"
 TILE = 320
 
 
@@ -28,8 +29,8 @@ def read_labels(label_path: Path) -> list[tuple[int, float, float, float, float]
 	return boxes
 
 
-def check_split(split: str) -> list[Path]:
-	images = sorted((YOLO_DIR / "images" / split).glob("*.jpg"))
+def check_split(split: str, match: str = "*") -> list[Path]:
+	images = sorted((YOLO_DIR / "images" / split).glob(f"{match}.jpg"))
 	images_per_class: Counter[int] = Counter()
 	boxes_per_class: Counter[int] = Counter()
 	problems: list[str] = []
@@ -52,7 +53,8 @@ def check_split(split: str) -> list[Path]:
 	for message in problems[:10]:
 		print(f"  ! {message}")
 	for class_id, name in enumerate(NAMES):
-		print(f"  {name:<12} {images_per_class[class_id]:>5} images {boxes_per_class[class_id]:>6} boxes")
+		if images_per_class[class_id]:
+			print(f"  {name:<12} {images_per_class[class_id]:>5} images {boxes_per_class[class_id]:>6} boxes")
 	return images
 
 
@@ -76,10 +78,18 @@ def draw_preview(images: list[Path], grid: int) -> Path:
 
 def main() -> None:
 	parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+	parser.add_argument("--dataset", type=Path, default=Path("data/yolo"), help="Dataset folder, relative to ml/")
+	parser.add_argument("--match", default="*", help='Only check images whose name matches this glob, e.g. "fridge_*"')
 	parser.add_argument("--grid", type=int, default=4)
 	args = parser.parse_args()
-	train_images = check_split("train")
-	check_split("val")
+
+	global YOLO_DIR
+	YOLO_DIR = ML_DIR / args.dataset
+	splits = sorted(path.name for path in (YOLO_DIR / "images").iterdir() if path.is_dir())
+	train_images = check_split("train", args.match)
+	for split in splits:
+		if split != "train":
+			check_split(split, args.match)
 	print(f"\nPreview: {draw_preview(train_images, args.grid)}")
 
 
