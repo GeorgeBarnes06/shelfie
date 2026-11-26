@@ -34,6 +34,11 @@ Needs [uv](https://docs.astral.sh/uv/) (`brew install uv`). The first `uv run` c
 	```bash
 	uv run python -m shelfie_ml.detect path/to/fridge.jpg
 	```
+	For unseen real-world fridge photos (Open Images val/test, not in `data/yolo`), download some to `data/fridge-photos/`:
+	```bash
+	uv run python -m shelfie_ml.fetch_fridge_photos --count 40
+	uv run python -m shelfie_ml.detect data/fridge-photos/*.jpg
+	```
 
 6. **Export for phones**: CoreML (`.mlpackage`, iOS) and ONNX (`.onnx`, iOS and Android), written next to the weights:
 	```bash
