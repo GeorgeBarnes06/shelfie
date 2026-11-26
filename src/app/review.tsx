@@ -3,8 +3,8 @@ import { useState } from "react";
 import { Alert, Image, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
-import { detectIngredients } from "@/lib/ingredients";
 import { prepareFridgePhoto } from "@/lib/photo";
+import { detectIngredients } from "@/lib/scan";
 
 export default function Review() {
 	const params = useLocalSearchParams<{ uri: string; width: string; height: string }>();
@@ -18,8 +18,11 @@ export default function Review() {
 				width: Number(params.width),
 				height: Number(params.height),
 			});
-			const ingredients = await detectIngredients(photo);
-			router.push({ pathname: "/ingredients", params: { ingredients: JSON.stringify(ingredients) } });
+			const { ingredients, isSample } = await detectIngredients(photo);
+			router.push({
+				pathname: "/ingredients",
+				params: { ingredients: JSON.stringify(ingredients), ...(isSample ? { sample: "1" } : {}) },
+			});
 		} catch (error) {
 			console.error(error);
 			Alert.alert("Something went wrong", "We couldn't process that photo. Please try again.");

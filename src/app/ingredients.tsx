@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 import { Button } from "@/components/Button";
-import { canonicalName, DETECTION_IS_PLACEHOLDER, displayName, type Ingredient } from "@/lib/ingredients";
+import { canonicalName, displayName, type Ingredient } from "@/lib/ingredients";
 
 function parseIngredients(raw: string | undefined): Ingredient[] {
 	if (!raw) {
@@ -17,7 +17,7 @@ function parseIngredients(raw: string | undefined): Ingredient[] {
 }
 
 export default function Ingredients() {
-	const params = useLocalSearchParams<{ ingredients?: string }>();
+	const params = useLocalSearchParams<{ ingredients?: string; sample?: string }>();
 	const initial = useMemo(() => parseIngredients(params.ingredients), [params.ingredients]);
 	const [ingredients, setIngredients] = useState<Ingredient[]>(initial);
 	const [newName, setNewName] = useState("");
@@ -45,11 +45,15 @@ export default function Ingredients() {
 		<KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-gray-900">
 			<View className="flex-1 px-6 pb-safe pt-safe">
 				<Text className="mt-4 text-2xl font-bold text-white">In your fridge</Text>
-				<Text className="mt-1 text-base text-gray-400">Remove anything we got wrong and add what we missed.</Text>
+				<Text className="mt-1 text-base text-gray-400">
+					{params.ingredients === undefined
+						? "Add what you have, one ingredient at a time."
+						: "Remove anything we got wrong and add what we missed."}
+				</Text>
 
-				{DETECTION_IS_PLACEHOLDER && (
+				{params.sample === "1" && (
 					<View className="mt-4 rounded-xl bg-amber-500/15 px-4 py-3">
-						<Text className="text-sm text-amber-300">{"Sample results: the ingredient detector isn't connected yet."}</Text>
+						<Text className="text-sm text-amber-300">{"Sample results: the ingredient detector needs a development build and doesn't run in Expo Go."}</Text>
 					</View>
 				)}
 
@@ -89,6 +93,7 @@ export default function Ingredients() {
 						placeholder="Add an ingredient"
 						placeholderTextColor="gray"
 						returnKeyType="done"
+						autoFocus={params.ingredients === undefined}
 						autoCapitalize="none"
 						className="flex-1 rounded-xl bg-gray-800 px-4 py-3 text-base text-white"
 					/>

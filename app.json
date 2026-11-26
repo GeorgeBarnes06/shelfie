@@ -43,7 +43,9 @@
 					"microphonePermission": false
 				}
 			],
-			"expo-image"
+			"expo-image",
+			"onnxruntime-react-native",
+			"expo-asset"
 		],
 		"experiments": {
 			"typedRoutes": true,

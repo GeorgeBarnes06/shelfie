@@ -5,9 +5,11 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { Button } from "@/components/Button";
 import { displayName, parseNameList } from "@/lib/ingredients";
 import { formatMinutes, getRecipe, matchRecipe, type RecipeIngredient, type RecipeMatch } from "@/lib/recipes";
+import { toggleSavedRecipe, useSavedRecipeIds } from "@/lib/saved-recipes";
 
-function IngredientRow({ ingredient, match }: { ingredient: RecipeIngredient; match: RecipeMatch }) {
-	const found = match.have.get(ingredient.name) ?? match.extras.get(ingredient.name);
+/** match is undefined when there's no scan to compare against (opened from Saved recipes). */
+function IngredientRow({ ingredient, match }: { ingredient: RecipeIngredient; match: RecipeMatch | undefined }) {
+	const found = match && (match.have.get(ingredient.name) ?? match.extras.get(ingredient.name));
 	const substitute = found && found !== ingredient.name ? found : undefined;
 
 	let mark = "·";
@@ -19,7 +21,7 @@ function IngredientRow({ ingredient, match }: { ingredient: RecipeIngredient; ma
 		note = substitute ? `Using your ${substitute}` : undefined;
 	} else if (ingredient.optional) {
 		note = "Optional";
-	} else {
+	} else if (match) {
 		mark = "!";
 		markClass = "text-amber-300";
 		note = "You need this";
@@ -47,11 +49,12 @@ export default function RecipeDetail() {
 	const params = useLocalSearchParams<{ id: string; fridge?: string }>();
 	const recipe = getRecipe(params.id);
 	const match = useMemo(
-		() => (recipe ? matchRecipe(recipe, new Set(parseNameList(params.fridge))) : undefined),
+		() => (recipe && params.fridge !== undefined ? matchRecipe(recipe, new Set(parseNameList(params.fridge))) : undefined),
 		[recipe, params.fridge],
 	);
+	const isSaved = useSavedRecipeIds().includes(params.id);
 
-	if (!recipe || !match) {
+	if (!recipe) {
 		return (
 			<View className="flex-1 items-center justify-center bg-gray-900 px-6">
 				<Text className="text-base text-gray-400">{"We couldn't find that recipe."}</Text>
@@ -65,15 +68,28 @@ export default function RecipeDetail() {
 	return (
 		<View className="flex-1 bg-gray-900 pt-safe">
 			<ScrollView contentContainerClassName="px-6 pb-safe">
-				<Pressable onPress={() => router.back()} accessibilityRole="button" hitSlop={8} className="mt-2 self-start py-2">
-					<Text className="text-base text-emerald-400">‹ Recipes</Text>
-				</Pressable>
+				<View className="mt-2 flex-row items-center justify-between">
+					<Pressable onPress={() => router.back()} accessibilityRole="button" hitSlop={8} className="py-2">
+						<Text className="text-base text-emerald-400">‹ Back</Text>
+					</Pressable>
+					<Pressable
+						onPress={() => toggleSavedRecipe(recipe.id)}
+						accessibilityRole="button"
+						accessibilityLabel={isSaved ? "Remove from saved recipes" : "Save recipe"}
+						hitSlop={8}
+						className="rounded-full bg-gray-800 px-4 py-2 active:bg-gray-700"
+					>
+						<Text className={`text-sm font-semibold ${isSaved ? "text-emerald-400" : "text-white"}`}>
+							{isSaved ? "♥ Saved" : "♡ Save"}
+						</Text>
+					</Pressable>
+				</View>
 
 				<Text className="mt-2 text-3xl font-bold text-white">{recipe.title}</Text>
 				<Text className="mt-1 text-base text-gray-400">
 					{formatMinutes(recipe.minutes)} · serves {recipe.serves}
 				</Text>
-				{match.missing.length === 0 ? (
+				{!match ? null : match.missing.length === 0 ? (
 					<Text className="mt-3 text-base text-emerald-400">You have everything you need from the fridge.</Text>
 				) : (
 					<Text className="mt-3 text-base text-amber-300">

@@ -1,8 +1,9 @@
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 
-/** Longest edge, in pixels, of the photo sent for ingredient detection. */
-const MAX_DIMENSION = 1024;
-const JPEG_QUALITY = 0.7;
+/** Longest edge, in pixels: the detector's input size, so it never decodes more pixels than it uses. */
+const MAX_DIMENSION = 640;
+/** High quality: heavy JPEG artefacts make small items harder to recognise. */
+const JPEG_QUALITY = 0.9;
 
 export type PhotoSource = {
 	uri: string;
@@ -18,7 +19,7 @@ export type PreparedPhoto = {
 };
 
 /**
- * Shrinks and compresses a fridge photo so it is quick to upload and cheap to analyse.
+ * Shrinks a fridge photo to the detector's input size so it is quick to decode and analyse.
  * Keeps the aspect ratio and never upscales.
  */
 export async function prepareFridgePhoto(photo: PhotoSource): Promise<PreparedPhoto> {

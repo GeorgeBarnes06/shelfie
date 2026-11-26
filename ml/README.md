@@ -69,7 +69,17 @@ uv run yolo val model=runs/ingredients-v2/weights/best.pt data=data/yolo-v2/frid
 
 ## Using the model in the app
 
-The app runs the ONNX export on the phone with ONNX Runtime. Photo preparation and
+The app runs the ONNX export on the phone with ONNX Runtime (`onnxruntime-react-native`).
+The bundled copy is `assets/models/ingredients.onnx`; to ship a new model, copy the export over it:
+
+```bash
+cp ml/runs/<run>/weights/best.onnx assets/models/ingredients.onnx
+```
+
+ONNX Runtime isn't in Expo Go, so real detection needs a development build
+(`npx expo run:ios --device`, which needs Xcode). In Expo Go the app shows sample results.
+
+ Photo preparation and
 output parsing live in `src/lib/detector/` and are plain TypeScript, so they can be checked
 on the Mac against the real model (onnxruntime-node) before any phone build:
 
