@@ -5,6 +5,10 @@ Usage: uv run python -m shelfie_ml.train [--epochs 30] [--model yolo26n.pt] [--d
 Round 2 (merged Open Images + fridge photos, from the pretrained model):
 	uv run python -m shelfie_ml.train --data data/yolo-v2/dataset.yaml --name ingredients-v2
 
+Round 3 (round 2 plus background photos, continuing from round 2's best weights):
+	uv run python -m shelfie_ml.add_backgrounds
+	uv run python -m shelfie_ml.train --model runs/ingredients-v2/weights/best.pt --data data/yolo-v3/dataset.yaml --epochs 15 --name ingredients-v3
+
 Resume an interrupted run:
 	uv run python -m shelfie_ml.train --name ingredients-v2 --resume
 """
