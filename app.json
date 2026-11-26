@@ -42,7 +42,8 @@
 					"photosPermission": "Shelfie uses your photo library so you can pick a picture of your fridge.",
 					"microphonePermission": false
 				}
-			]
+			],
+			"expo-image"
 		],
 		"experiments": {
 			"typedRoutes": true,

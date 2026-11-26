@@ -67,6 +67,25 @@ caffeinate -is uv run python -u -m shelfie_ml.train --data data/yolo-v2/dataset.
 uv run yolo val model=runs/ingredients-v2/weights/best.pt data=data/yolo-v2/fridge.yaml split=test
 ```
 
+## Using the model in the app
+
+The app runs the ONNX export on the phone with ONNX Runtime. Photo preparation and
+output parsing live in `src/lib/detector/` and are plain TypeScript, so they can be checked
+on the Mac against the real model (onnxruntime-node) before any phone build:
+
+```bash
+# from the repo root
+npm run verify-detector -- ml/runs/ingredients-v2/weights/best.onnx ml/data/fridge-photos [reference.json]
+```
+
+`reference.json` (optional) maps file name to Ultralytics' `[name, confidence, [x1, y1, x2, y2]]`
+detections for the same ONNX model. On the 40 fridge photos the TypeScript pipeline matched
+16/17 reference boxes; the differences were detections right at the 0.25 confidence cut-off
+(JPEG decoders and resizers differ slightly).
+
+The model's ingredient list in `src/lib/ingredients.ts` (`INGREDIENT_NAMES`) must stay in
+the same order as `NAMES` in `shelfie_ml/classes.py`.
+
 ## Ingredients
 
 The 57 classes and each dataset's label mapping are in [`shelfie_ml/classes.py`](shelfie_ml/classes.py).
