@@ -2,8 +2,11 @@
 
 Usage: uv run python -m shelfie_ml.train [--epochs 30] [--model yolo26n.pt] [--data data/yolo/dataset.yaml] [--name ingredients-v1]
 
-Round 2 (fine-tune round 1 on the merged dataset):
-	uv run python -m shelfie_ml.train --model runs/ingredients-v1/weights/best.pt --data data/yolo-v2/dataset.yaml --name ingredients-v2
+Round 2 (merged Open Images + fridge photos, from the pretrained model):
+	uv run python -m shelfie_ml.train --data data/yolo-v2/dataset.yaml --name ingredients-v2
+
+Resume an interrupted run:
+	uv run python -m shelfie_ml.train --name ingredients-v2 --resume
 """
 
 import argparse
@@ -23,7 +26,12 @@ def main() -> None:
 	parser.add_argument("--batch", type=int, default=16)
 	parser.add_argument("--name", default="ingredients-v1")
 	parser.add_argument("--fraction", type=float, default=1.0, help="Use only this fraction of training images (for quick tests)")
+	parser.add_argument("--resume", action="store_true", help="Continue the interrupted run called --name from its last.pt")
 	args = parser.parse_args()
+
+	if args.resume:
+		YOLO(str(ML_DIR / "runs" / args.name / "weights" / "last.pt")).train(resume=True)
+		return
 
 	candidates = [ML_DIR / "weights" / args.model, ML_DIR / args.model]
 	model = YOLO(str(next((path for path in candidates if path.exists()), args.model)))

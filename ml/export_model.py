@@ -26,7 +26,7 @@ from pathlib import Path
 from ultralytics import YOLO
 
 ML_DIR = Path(__file__).resolve().parent
-DEFAULT_WEIGHTS = ML_DIR / "runs" / "ingredients-v1" / "weights" / "best.pt"
+DEFAULT_WEIGHTS = ML_DIR / "runs" / "ingredients-v2" / "weights" / "best.pt"
 
 
 def main() -> None:

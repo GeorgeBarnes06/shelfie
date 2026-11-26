@@ -37,7 +37,7 @@ Needs [uv](https://docs.astral.sh/uv/) (`brew install uv`). The first `uv run` c
 
 6. **Export for phones**: CoreML (`.mlpackage`, iOS) and ONNX (`.onnx`, iOS and Android), written next to the weights:
 	```bash
-	uv run export_model.py
+	uv run export_model.py runs/ingredients-v2/weights/best.pt
 	```
 	`export_model.py` brings its own pinned environment (Python 3.12, PyTorch 2.7, NumPy 1.26), because coremltools
 	and onnxruntime don't support the newer versions used for training. Don't "upgrade" those pins without re-testing.
@@ -45,14 +45,15 @@ Needs [uv](https://docs.astral.sh/uv/) (`brew install uv`). The first `uv run` c
 ## Round 2: real fridge photos
 
 Round 1 trains on Open Images only. Round 2 adds [FridgeFoodDetection](https://universe.roboflow.com/objectdetectionlearning-4empo/fridgefooddetection-cxnl3)
-(real fridge photos) and fine-tunes the round-1 model on both:
+(real fridge photos). Rather than fine-tuning round 1, train once from the pretrained model on the merged set
+(about 23 min/epoch on an M4 MacBook Air; quit other apps first, as memory pressure makes it ~3x slower):
 
 ```bash
 # Needs ROBOFLOW_API_KEY in ml/.env (git-ignored; free Roboflow account)
 uv run python -m shelfie_ml.fetch_roboflow --project fridgefooddetection-cxnl3 --version 1
 uv run python -m shelfie_ml.merge_datasets          # builds data/yolo-v2/
 uv run python -m shelfie_ml.check_dataset --dataset data/yolo-v2
-uv run python -m shelfie_ml.train --model runs/ingredients-v1/weights/best.pt --data data/yolo-v2/dataset.yaml --name ingredients-v2 --epochs 15
+caffeinate -is uv run python -u -m shelfie_ml.train --data data/yolo-v2/dataset.yaml --name ingredients-v2 > data/train-v2.log 2>&1
 ```
 
 `data/yolo-v2/fridge.yaml` validates and tests on fridge photos only. That's the score that matters for Shelfie:
