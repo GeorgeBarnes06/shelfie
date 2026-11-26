@@ -1,5 +1,21 @@
 import type { PreparedPhoto } from "@/lib/photo";
 
+/**
+ * Every ingredient Shelfie's detector knows, in its class-id order.
+ * Keep in sync with NAMES in ml/shelfie_ml/classes.py (append-only).
+ */
+export const INGREDIENT_NAMES = [
+	"apple", "artichoke", "banana", "beer", "bell pepper", "bread", "broccoli", "cabbage", "cantaloupe",
+	"carrot", "cheese", "cucumber", "egg", "asparagus", "grapes", "grapefruit", "juice", "lemon", "mango",
+	"milk", "mushroom", "orange", "peach", "pear", "pineapple", "pomegranate", "potato", "pumpkin", "radish",
+	"shrimp", "strawberry", "tomato", "watermelon", "wine", "zucchini",
+	"beef", "blueberry", "butter", "chicken", "chocolate", "corn", "eggplant", "flour", "cream", "ginger",
+	"goat cheese", "chilli", "leafy greens", "green beans", "ground beef", "ham", "lime", "meat", "onion",
+	"spinach", "sugar", "sweet potato",
+] as const;
+
+export type IngredientName = (typeof INGREDIENT_NAMES)[number];
+
 export type Ingredient = {
 	/** Lower-case ingredient name, matching the detector's class names (e.g. "bell pepper"). */
 	name: string;
@@ -42,4 +58,72 @@ export function displayName(name: string): string {
 /** Normalises user-typed names so "  Bell Pepper " matches the detector's "bell pepper". */
 export function normaliseName(name: string): string {
 	return name.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+/** Parses a JSON list of ingredient names from a route param, ignoring anything malformed. */
+export function parseNameList(raw: string | undefined): string[] {
+	if (!raw) {
+		return [];
+	}
+	try {
+		const parsed: unknown = JSON.parse(raw);
+		return Array.isArray(parsed) ? parsed.filter((name): name is string => typeof name === "string") : [];
+	} catch {
+		return [];
+	}
+}
+
+/** Common other names (often British) for detector ingredients. */
+const ALIASES: Record<string, IngredientName> = {
+	aubergine: "eggplant",
+	courgette: "zucchini",
+	prawn: "shrimp",
+	pepper: "bell pepper",
+	capsicum: "bell pepper",
+	mince: "ground beef",
+	"minced beef": "ground beef",
+	"beef mince": "ground beef",
+	steak: "beef",
+	chili: "chilli",
+	"chili pepper": "chilli",
+	sweetcorn: "corn",
+	lettuce: "leafy greens",
+	rocket: "leafy greens",
+	kale: "leafy greens",
+	salad: "leafy greens",
+	feta: "cheese",
+	cheddar: "cheese",
+	mozzarella: "cheese",
+	parmesan: "cheese",
+	"goat's cheese": "goat cheese",
+	"goats cheese": "goat cheese",
+	"double cream": "cream",
+	"single cream": "cream",
+	"orange juice": "juice",
+	"apple juice": "juice",
+	melon: "cantaloupe",
+	grape: "grapes",
+	bacon: "ham",
+	"green bean": "green beans",
+	"sweet potatoes": "sweet potato",
+};
+
+const KNOWN = new Set<string>(INGREDIENT_NAMES);
+
+/**
+ * Normalises a typed name and maps plurals and other names onto the detector's names,
+ * so "Eggs", "prawns" and "courgette" match recipes. Unknown names are returned normalised.
+ */
+export function canonicalName(raw: string): string {
+	const name = normaliseName(raw);
+	const singulars = [name, name.replace(/ies$/, "y"), name.replace(/oes$/, "o"), name.replace(/es$/, ""), name.replace(/s$/, "")];
+	for (const candidate of singulars) {
+		if (KNOWN.has(candidate)) {
+			return candidate;
+		}
+		if (candidate in ALIASES) {
+			return ALIASES[candidate];
+		}
+	}
+	return name;
 }

@@ -1,9 +1,9 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 import { Button } from "@/components/Button";
-import { DETECTION_IS_PLACEHOLDER, displayName, type Ingredient, normaliseName } from "@/lib/ingredients";
+import { canonicalName, DETECTION_IS_PLACEHOLDER, displayName, type Ingredient } from "@/lib/ingredients";
 
 function parseIngredients(raw: string | undefined): Ingredient[] {
 	if (!raw) {
@@ -27,7 +27,7 @@ export default function Ingredients() {
 	}
 
 	function add() {
-		const name = normaliseName(newName);
+		const name = canonicalName(newName);
 		if (!name) {
 			return;
 		}
@@ -38,7 +38,7 @@ export default function Ingredients() {
 	}
 
 	function findRecipes() {
-		Alert.alert("Recipes coming soon", `You'd get recipes using ${ingredients.length} ingredients.`);
+		router.push({ pathname: "/recipes", params: { fridge: JSON.stringify(ingredients.map((ingredient) => ingredient.name)) } });
 	}
 
 	return (
